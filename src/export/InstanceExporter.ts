@@ -603,6 +603,8 @@ export class InstanceExporter implements Fishable {
     }
 
     let isResource = true;
+    let isLogical  = false;
+
     const json = this.fisher.fishForFHIR(
       fshDefinition.instanceOf,
       Type.Resource,
@@ -621,24 +623,25 @@ export class InstanceExporter implements Fishable {
 
     // Since creating an instance of a Logical is not allowed,
     // creating an instance of a Profile of a logical model is also not allowed
-    if (json.kind === 'logical' && json.derivation === 'constraint') {
-      throw new InstanceOfLogicalProfileError(
-        fshDefinition.name,
-        fshDefinition.instanceOf,
-        fshDefinition.sourceInfo
-      );
-    }
+    // if (json.kind === 'logical' && json.derivation === 'constraint') {
+    //   throw new InstanceOfLogicalProfileError(
+    //     fshDefinition.name,
+    //     fshDefinition.instanceOf,
+    //     fshDefinition.sourceInfo
+    //   );
+    // }
 
     if (json.kind !== 'resource') {
       // If the instance is not a resource, it should be inline, since it cannot exist as a standalone instance
       isResource = false;
-      if (fshDefinition.usage !== 'Inline') {
-        logger.warn(
-          `Instance ${fshDefinition.name} is not an instance of a resource, so it should only be used inline on other instances, and it will not be exported to a standalone file. Specify "Usage: #inline" to remove this warning.`,
-          fshDefinition.sourceInfo
-        );
-        fshDefinition.usage = 'Inline';
-      }
+      isLogical = true;
+      // if (fshDefinition.usage !== 'Inline') {
+      //   logger.warn(
+      //     `Instance ${fshDefinition.name} is not an instance of a resource, so it should only be used inline on other instances, and it will not be exported to a standalone file. Specify "Usage: #inline" to remove this warning.`,
+      //     fshDefinition.sourceInfo
+      //   );
+      //   fshDefinition.usage = 'Inline';
+      // }
     }
 
     // an instance can't be created if the specialization it is created from is abstract.
@@ -707,6 +710,10 @@ export class InstanceExporter implements Fishable {
       }
     } else {
       instanceDef._instanceMeta.sdType = instanceOfStructureDefinition.type;
+    }
+    if ( isLogical ){
+      instanceDef.isLogical = true;
+      instanceDef.logicalType = instanceOfStructureDefinition.type;
     }
 
     // Set Assigned values based on the FSH rules and the Structure Definition

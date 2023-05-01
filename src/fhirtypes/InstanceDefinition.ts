@@ -14,6 +14,8 @@ import { InstanceUsage } from '../fshtypes/InstanceUsage';
 export class InstanceDefinition {
   _instanceMeta: InstanceMeta = {};
   resourceType: string;
+  isLogical = false;
+  logicalType: string;
   // id?: FHIRId; // provided by HasId mixin
   meta?: Meta;
   [key: string]: any; // Allow any key value pair on InstanceDefinition due to the high number of potential properties that can be set on a FHIR instance
@@ -23,9 +25,17 @@ export class InstanceDefinition {
    * @returns {string} the filename
    */
   getFileName(): string {
-    return sanitize(`${this.resourceType}-${this.id ?? this._instanceMeta.name}.json`, {
-      replacement: '-'
-    });
+    if ( this.isLogical ){
+      return '../logical/'+sanitize(`${this.logicalType}-${this.id ?? this._instanceMeta.name}.json`, {
+        replacement: '-'
+      });
+  
+    } else {
+      return sanitize(`${this.resourceType}-${this.id ?? this._instanceMeta.name}.json`, {
+        replacement: '-'
+      });
+  
+    }
   }
 
   toJSON(): any {
